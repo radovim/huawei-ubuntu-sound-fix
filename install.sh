@@ -21,21 +21,38 @@ elif
     command -v dnf &>/dev/null; then
     echo "Using dnf to install dependencies..."
     sudo dnf install -y alsa-tools alsa-utils
+elif
+    command -v xbps-install &>/dev/null; then
+    echo "Using xbps-install to install dependencies..."
+    sudo xbps-install -Su alsa-tools alsa-utils
 else
-    echo "Neither apt, pacman, eopkg, zypper, nor dnf found. Cannot install dependencies."
+    echo "Neither apt, pacman, eopkg, zypper, dnf nor xbps-install found. Cannot install dependencies."
 fi
 
-echo "Copying files..."
-sudo cp huawei-soundcard-headphones-monitor.sh /usr/local/bin/
-sudo cp huawei-soundcard-headphones-monitor.service /etc/systemd/system/
+if command -v xbps-install &>/dev/null; then
+    echo "Copying files..."
+    sudo cp huawei-soundcard-headphones-monitor.sh /usr/local/bin/
+    sudo cp -r huawei-soundcard-headphones-monitor /etc/sv/
 
-echo "Setting rights..."
-sudo chmod +x /usr/local/bin/huawei-soundcard-headphones-monitor.sh
-sudo chmod +x /etc/systemd/system/huawei-soundcard-headphones-monitor.service
+    echo "Setting rights..."
+    sudo chmod +x /usr/local/bin/huawei-soundcard-headphones-monitor.sh
+    sudo chmod +x /etc/sv/huawei-soundcard-headphones-monitor/run
 
-echo "Setting up daemon..."
-sudo systemctl daemon-reload
-sudo systemctl enable huawei-soundcard-headphones-monitor
-sudo systemctl restart huawei-soundcard-headphones-monitor
+    echo "Setting up daemon..."
+    sudo ln -s /etc/sv/huawei-soundcard-headphones-monitor /var/service
+else 
+    echo "Copying files..."
+    sudo cp huawei-soundcard-headphones-monitor.sh /usr/local/bin/
+    sudo cp huawei-soundcard-headphones-monitor.service /etc/systemd/system/
+
+    echo "Setting rights..."
+    sudo chmod +x /usr/local/bin/huawei-soundcard-headphones-monitor.sh
+    sudo chmod +x /etc/systemd/system/huawei-soundcard-headphones-monitor.service
+
+    echo "Setting up daemon..."
+    sudo systemctl daemon-reload
+    sudo systemctl enable huawei-soundcard-headphones-monitor
+    sudo systemctl restart huawei-soundcard-headphones-monitor
+fi
 
 echo "Complete!"
